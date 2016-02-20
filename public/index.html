@@ -1,2 +1,42 @@
-index.html </br>
-<a href='foo.html'>link</a>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Games</title>
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+    <link rel="shortcut icon" href="favicon.ico">
+</head>
+<body onload="handleLoad()">
+    <header>
+        <h1>Time Sweeper!</h1>
+    </header>
+    <main>
+        <section>
+            <!-- This is where the content will be inserted -->
+            <div id="divcontainer"></div>
+            <!-- Bomb is a sprite used by cell.js -->
+            <!-- https://www.iconfinder.com/icons/1232/bomb_explosive_icon#size=128 -->
+            <img id="bomb" src="bomb.ico" hidden>
+            <img id="tile" src="tile.png" hidden>
+            <!-- https://www.iconfinder.com/icons/44253/flag_red_icon#size=32 -->
+            <img id="flag" src="flag.ico" hidden>
+        </section>
+        <section>
+            <a href="http://kylegmaxwell.com/demos/index.html">up</a> <br/>
+        </section>
+    </main>
+    <script src="node.js"></script>
+    <script src="cell.js"></script>
+    <script src="board.js"></script>
+    <script src="game.js"></script>
+    <script src="index.js"></script>
+    <script>
+        function handleLoad() {
+            var container = document.getElementById("divcontainer");
+            // var bomb = document.getElementById("bomb");
+            setup(container, bomb);
+        }
+    </script>
+</body>
+</html>

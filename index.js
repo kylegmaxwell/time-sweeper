@@ -1,3 +1,6 @@
+'use strict';
+// var Cell = require('./src/stores/cell');
+
 var express = require('express');
 var globals = require('./src/stores/globals')
 
