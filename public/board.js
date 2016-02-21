@@ -5,49 +5,61 @@
  *
  * Class to represent one game board state
  */
-
 class Board {
-
-    // private Cell [][] grid;
-    // private var dim;//dimension of cells
-    // private var rows, cols;
-    // private var time;
-    // public static Random rnd = new Random();
-    // public static final var shuffles=7;
-    // public var mines,m;
-
-    // public static final var LEFT=0,RIGHT=1,BOTH=2;
-    // private boolean gameIsOver,victory;
-
     constructor(numRows, numCols, numMines, cellSize) {
         this._gameIsOver=false;
         this._victory=false;
-        // this._colors = new Color[8];
-        // for (var i=0;i<8;i++)
-           // colors[i]=new Color(((i+4)%6)*50,((i+2)%5)*50,((i+3)%4)*50);
-        // m=mines=numMines;
-        // time=0;
-        // dim=cellDimension;
+
         // The radius of a game cell in pixels
         this._cellSize = cellSize;
         // The amount of padding at the edge of the canvas
         this._margin =  Math.floor(cellSize * 0.4);
         this._numRows=numRows;
         this._numCols=numCols;
-        // boolean [][] b = getMines();
 
-        // grid = new Cell[rows][cols];
         this._grid = [];
         this._initGrid();
 
-        // Create the mines in the first N cells in row major order
-        if (numMines < 0 || numMines >= numRows * numCols) {
-            throw new Error("Invalid number of mines.");
+        if (numMines.constructor === Array) {
+            this._numMines = this._initMinesFromArray(numMines);
+        } else {
+            this._numMines = numMines;
+            // Create the mines in the first N cells in row major order
+            if (this._numMines < 0 || this._numMines >= numRows * numCols) {
+                throw new Error("Invalid number of mines.");
+            }
+            this._initMines();
         }
-        this._numMines = numMines;
-        this._initMines();
+
+        // The number of mines with flags on them
+        this._numFlaggedMines = 0;
+
+        // The number of covered tiles that could contain mines
+        this._numTilesRemaining = this._numRows * this._numCols - this._numMines;
+
+        // The total number of flags on the board
+        this._numFlags = 0;
 
         this._calculateNeighbors();
+    }
+
+    /**
+     * Create a non-random board from input data
+     * @param  {Array.<Array.<Number>>} mines Square array of mines
+     * @return {Number}       The number of mines in the array
+     */
+    _initMinesFromArray(mines) {
+        var count = 0;
+        // var mines = this._numMines;
+        for (var r=0;r<this._numRows;r++) {
+            for (var c=0;c<this._numCols;c++) {
+                if (mines[r][c] === 1) {
+                    this._grid[r][c].setMine();
+                    count++;
+                }
+            }
+        }
+        return count;
     }
 
     getCanvasWidth() {
@@ -63,7 +75,6 @@ class Board {
             this._grid.push([]);
             for (var c=0;c<this._numCols;c++) {
                 this._grid[r].push(new Cell(false));
-                // grid[r][c]=new Cell(b[r][c]);
             }
         }
     }
@@ -76,12 +87,7 @@ class Board {
     _inBounds(r, c) {
         return r >= 0 && r < this._numRows && c >= 0 && c < this._numCols;
     }
-    // public var getM()
-    // { return m; }
-    // public boolean getGameOver()
-    // {
-    //     return gameIsOver;
-    // }
+
     _initMines()
     {
         var mines = this._numMines;
@@ -99,42 +105,44 @@ class Board {
         }
     }
 
-    // //use Ms. Teukolsky's Friend's Shuffle algorithm
-    // //swap each element with a random element
-    // //(this is ment to be repeated more than once to achieve a good shuffle
-    _shuffle() {
-        console.log('TODO shuffle');
-        //TODO
-    //     boolean temp, i, j;
-    //     var rr, cc;
-    //     //swap each element with a random element
-    //     for (var r=0;r<rows;r++)
-    //         for (var c=0;c<cols;c++)
-    //         {
-    //             temp=arr[r][c];
-    //             rr = rnd.nextInt(rows);
-    //             cc = rnd.nextInt(cols);
-    //             arr[r][c]=arr[rr][cc];
-    //             arr[rr][cc]=temp;
-    //         }
+    /**
+     * Return a random number between 0 and range
+     * @param  {Number} range The maximum value exclusive
+     * @return {Number}       A random natural number
+     */
+    _randInt(range) {
+        return Math.floor((Math.random() * range));
+
     }
+    /**
+     * Use Ms. Teukolsky's Friend's Shuffle algorithm
+     * swap each element with a random element
+     * (this is ment to be repeated more than once to achieve a good shuffle
+     */
+    _shuffle() {
+        var temp, i, j, rr, cc;
+        //swap each element with a random element
+        for (var r=0;r<this._numRows;r++)
+            for (var c=0;c<this._numCols;c++)
+            {
+                var temp=this._grid[r][c];
+                rr = this._randInt(this._numRows);
+                cc = this._randInt(this._numCols);
+                this._grid[r][c]=this._grid[rr][cc];
+                this._grid[rr][cc]=temp;
+            }
+    }
+
     _calculateNeighbors() {
         // calculate the neighbor number of mines
         for (var r=0;r<this._numRows;r++)
         for (var c=0;c<this._numCols;c++) {
             var cell = this._grid[r][c];
             if (cell.isMined()) {
-                for (var i=-1;i<2;i++)
-                for (var j=-1;j<2;j++) {
-                    // count the mine in each of its neighbors
-                    if (this._inBounds(r+i, c+j)) {
-                        var neighborCell=this._grid[r+i][c+j];
-                        if (!neighborCell.isMined()) {
-                            neighborCell.incNumMines();
-                        }
-                    }
-
-                }
+                cell.incNumMines();
+                this._neighborFill(r, c, function (r, c, cell) {
+                    cell.incNumMines();
+                });
             }
         }
     }
@@ -157,15 +165,16 @@ class Board {
         return str;
     }
 
-    draw(ctx, space, buffered) {
-        var drawFunc = buffered ? 'drawBuffered' : 'drawImmediate';
-        this._draw(ctx, space, drawFunc);
-    }
-
-    _draw(ctx, space, drawFunc) {
+    /**
+     * Draw the board
+     * @param  {2D} ctx         Drawing context
+     * @param  {Number} space   Amount of space between tiles
+     */
+    draw(ctx, space) {
         var radius = this._cellSize-2*space;
         var x = this._margin+space;
         var y = this._margin+space;
+        var drawFunc = this._gameIsOver ? 'drawReveal' : 'draw';
         for (var r=0;r<this._numRows;r++) {
             for (var c=0;c<this._numCols;c++) {
                 this._grid[r][c][drawFunc](ctx, x, y, radius, space);
@@ -176,8 +185,11 @@ class Board {
         }
     }
 
+    /**
+     * Draw the border lines between the cells
+     * @param  {2D} ctx The drawing context
+     */
     drawLines (ctx) {
-
         var y = this._margin;
         for (var r=0;r<=this._numRows;r++) {
             ctx.moveTo(this._margin, y);
@@ -187,209 +199,155 @@ class Board {
         var x = this._margin;
         for (var c=0;c<=this._numCols;c++) {
             ctx.moveTo(x, this._margin);
-            ctx.lineTo(x, this.getCanvasWidth() - this._margin)
+            ctx.lineTo(x, this.getCanvasHeight() - this._margin)
             x+=this._cellSize;
         }
-
     }
-    // public void paint(Graphics g)
-    // {
-    //     Color prev = g.getColor();
-    //     paintRegular(g);
-    //     if (gameIsOver)
-    //         drawMines(g);
-    //     g.setColor(prev);//restore old color
-    // }
-    // private void drawMines(Graphics g)
-    // {
-    //     var x=0, y=0;
-    //     g.setColor(Color.BLACK);
-    //     for (var r=0;r<rows;r++)
-    //     {
-    //         y+=dim;
-    //         x=0;
-    //         for (var c=0;c<cols;c++)
-    //         {
-    //             x+=dim;
-    //             if (grid[r][c].getMine())
-    //                 g.fillOval(x+1,y+1,dim-1,dim-1);
-    //         }
-    //     }
-    // }
-    // private void paintRegular(Graphics g)
-    // {
-    //     var x=0, y=0;
-    //     for (var r=0;r<rows;r++)
-    //     {
-    //         y+=dim;
-    //         x=0;
-    //         for (var c=0;c<cols;c++)
-    //         {
-    //             x+=dim;
-    //             g.setColor(Color.GRAY);
-
-    //             //square has been clicked on
-    //             if (grid[r][c].getClick())
-    //             {
-    //                 //draw blank
-    //                 g.setColor(Color.LIGHT_GRAY);
-    //                 g.fillRect(x,y,dim,dim);
-
-    //                 g.setColor(Color.black);
-    //                 g.setFont(new Font("Arial",0,dim-1));
-    //                 if (grid[r][c].getMine())
-    //                 {
-    //                     g.fillOval(x+1,y+1,dim-1,dim-1);
-    //                     g.setColor(Color.red);
-    //                     g.drawLine(x,y,x+dim,y+dim);
-    //                     g.drawLine(x,y+dim,x+dim,y);
-    //                 }
-    //                 else
-    //                 {
-    //                     var zero = grid[r][c].getNumMines();
-    //                     if (zero!=0)
-    //                     {
-    //                         g.setColor(colors[zero-1]);
-    //                         g.drawString(Integer.toString(zero),x+1,y+dim-1);
-    //                     }
-    //                 }
-    //             }
-    //             else
-    //             {
-    //                 if (grid[r][c].getFlag())
-    //                 {
-    //                     g.setColor(Color.RED);
-    //                     g.fillRect(x,y,dim,dim);
-    //                 }
-    //                 else
-    //                 {
-    //                     g.setColor(Color.GRAY);
-    //                     g.fillRect(x,y,dim,dim);
-    //                 }
-    //             }
-
-
-    //             //draw box outline
-    //             g.setColor(Color.BLACK);
-    //             g.drawRect(x,y,dim,dim);
-    //         }
-    //     }
-    // }
 
     /**
-     * Determine what cell was clicked and update it
+     * Perform some user action given at some coordinates
+     * @param  {Number} x    The screen space horizontal position
+     * @param  {Number} y    The screen space vertical position
+     * @param  {Number}} func The callback to execute on the cell at the given coordinates
+     */
+    getCellFromScrenSpace(x, y, func) {
+        var col = Math.floor((x-this._margin) / this._cellSize);
+        var row = Math.floor((y-this._margin) / this._cellSize);
+        var cell = null
+        if (this._inBounds(row, col)) {
+            cell = this._grid[row][col];
+        }
+        if (cell) {
+            func(row, col, cell);
+        }
+    }
+
+    /**
+     * Flag or un-flag a cell at the given coordinates as a mine
      * @param  {Number} x Click location in pixels
      * @param  {Number} y Click location in pixels
      */
-    clickAt(x, y, operation) {
-        var col = Math.floor((x-this._margin) / this._cellSize);
-        var row = Math.floor((y-this._margin) / this._cellSize);
-        if (this._inBounds(row, col)) {
-            this._grid[row][col][operation]();
+    doFlag(x, y) {
+        if (this._gameIsOver) return;
+        var _this = this;
+        this.getCellFromScrenSpace(x, y, function (row, col, cell) {
+            var result = cell.flag();
+            // First record just whether the flag was right
+            _this._numFlaggedMines += result;
+            // Then record the user's choices
+            var userDelta = cell.isFlagged() ? 1 : -1;
+            _this._numFlags += userDelta;
+            _this._neighborFill(row, col, function (r, c, cell) {
+                cell.changeNumFlags(userDelta);
+            });
+        });
+
+    }
+
+    /**
+     * Explore a cell and track the number remaining
+     * @param  {Cell} cell  The cell to explore
+     * @return {Boolean}    Whether the cell is satisfied
+     */
+    _exploreCell(cell) {
+        if (!cell) return;
+        // if the cell will change state when explored
+        if (!cell.isClicked() && !cell.isFlagged()) {
+            this._numTilesRemaining--;
+            // console.log(this._numTilesRemaining);
+            if (this._numTilesRemaining < 1) {
+                // console.log('gameIsOver');
+                this._gameIsOver = true;
+                this._victory = true;
+            }
+        }
+        var result = cell.explore();
+        return result;
+    }
+
+    /**
+     * Explore a cell at the given coordinates to see what's there
+     * @param  {Number} x Click location in pixels
+     * @param  {Number} y Click location in pixels
+     */
+    doExplore(x, y) {
+        if (this._gameIsOver) return;
+        var _this = this;
+        this.getCellFromScrenSpace(x, y, function (row, col, cell) {
+            var wasExplored = cell.isClicked();
+            _this._exploreCell(cell);
+            if (cell.isExploded()) {
+                _this._gameIsOver = true;
+            } else if ((cell.getNumMines() === 0 || wasExplored) && cell.isSatisfied()) {
+                _this._floodFill(row, col);
+            }
+        });
+    }
+
+    /**
+     * Apply some operation to all the neighbors of a cell at given index coordinates
+     * @param  {Number} r    Cell row
+     * @param  {Number}} c    Cell column
+     * @param  {Function} func Callback to execute on neighbors
+     */
+    _neighborFill(r, c, func) {
+        if (!this._inBounds(r, c)) return;
+        // For each neighbor
+        for (var i=-1;i<2;i++)
+            for (var j=-1;j<2;j++) {
+                // count the mine in each of its neighbors
+                if (this._inBounds(r+i, c+j)) {
+                    func(r+i, c+j, this._grid[r+i][c+j]);
+                }
+            }
+    }
+
+    /**
+     * Explore this cell and it's satisfied neighbors recursively
+     * @param  {[type]} r [description]
+     * @param  {[type]} c [description]
+     * @return {[type]}   [description]
+     */
+    _floodFill(r, c) {
+        if (!this._inBounds(r, c)) return;
+        var cell = this._grid[r][c];
+        var _this = this;
+        if (cell.isSatisfied()) {
+            var func = function exploreNeighbors(r, c, cell) {
+                if (!cell.isFlagged && cell.isMined()) {
+                    _this._gameIsOver = true;
+                }
+                if (!cell.isClicked() && _this._exploreCell(cell) && (cell.getNumMines() === 0)) {
+                    _this._floodFill(r, c);
+                }
+            };
+            this._neighborFill(r, c, func);
         }
     }
-    // public boolean click(var e, var x, var y)
-    // {
-    //     if (getGameOver())
-    //         return true;
-    //     x-=dim;
-    //     y-=(23+dim);
-    //     x/=dim;
-    //     y/=dim;
-    //     Cell c = grid[y][x];
-    //     //var b = e.getButton();
-    //     if (e==5)
-    //     {
-    //         JOptionPane.showMessageDialog(null,c.getNumFlags()+","+c.getNumMines());
-    //         return false;
-    //     }
-    //     if (e==BOTH)
-    //     {
-    //         if (c.getClick() && c.getNumFlags()==c.getNumMines())
-    //         {
-    //             for (var i=-1;i<2;i++)
-    //                 for (var j=-1;j<2;j++)
-    //                     try
-    //                     {
-    //                         if (click(grid[y+i][x+j],x+j,y+i))
-    //                             return true;
-    //                     }
-    //                     catch (ArrayIndexOutOfBoundsException ex)
-    //                     {}
-    //         }
-    //     }
-    //     else if(e==RIGHT)
-    //     {
-    //         boolean flag = c.flag();
 
-    //         if (!c.getClick())
-    //         {
-    //             if (flag)
-    //                 m--;
-    //             else
-    //                 m++;
-    //             for (var i=-1;i<2;i++)
-    //                 for (var j=-1;j<2;j++)
-    //                     try
-    //                     {
-    //                         if (flag)
-    //                             grid[y+i][x+j].incNumFlags();
-    //                         else
-    //                             grid[y+i][x+j].decNumFlags();
-    //                     }
-    //                     catch (ArrayIndexOutOfBoundsException ex)
-    //                     {}
-    //         }
-    //     }
-    //     else if (e==LEFT)
-    //     {
-    //         if (click(c,x,y))
-    //             return true;
-    //     }
-    //     return win();
-    // }
-    // private boolean win()
-    // {
-    //     //check for victory
-    //     if (m==0)
-    //     {
-    //         for (var r=0;r<rows;r++)
-    //             for (var c=0;c<cols;c++)
-    //                 if (!grid[r][c].getClick() && !grid[r][c].getFlag())
-    //                     return false;//might not be correct mine mapping
-    //         gameIsOver=true;
-    //         victory=true;
-    //         return true;
-    //     }
-    //     return false;
-    // }
-    // private boolean click(Cell c, var x, var y)
-    // {
-    //     var click = c.click();
-    //     if (click==Cell.MINE)
-    //     {
-    //         gameIsOver=true;
-    //         return true;
-    //     }
-    //     if (click==0)
-    //         clickHelp(x,y);
-    //     return false;
-    // }
+    /**
+     * Get the remaining mines number to display in the UI.
+     * This is not the actual number of mines remaining.
+     * It is how many mines there would be if the flags are all correct.
+     * @return {Number} How many mines
+     */
+    getNumDisplayMines() {
+        return this._numMines - this._numFlags;
+    }
 
-    // private void clickHelp(var x, var y)
-    // {
-    //     for (var i=-1;i<2;i++)
-    //         for (var j=-1;j<2;j++)
-    //             try
-    //             {
-    //                 if (!grid[y+i][x+j].getClick() && grid[y+i][x+j].click()==0)
-    //                     clickHelp(x+j,y+i);
-    //             }
-    //             catch (ArrayIndexOutOfBoundsException ex)
-    //             {}
+    /**
+     * Tell whether you won yet.
+     * @return {Boolean} True if win.
+     */
+    getVictory() {
+        return this._victory;
+    }
 
-    // }
-    // public boolean getVictory() {
-    //     return victory;
-    // }
+    /**
+     * Tell if the game is over, win or lose.
+     * @return {Boolean} The game has ended.
+     */
+    gameIsOver() {
+        return this._gameIsOver;
+    }
 }

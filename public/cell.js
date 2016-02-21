@@ -1,12 +1,9 @@
 'use strict';
-// /**
-//  * Class to represent a cell in the game.
-//  * Generally this contains some data, like whether there is a mine
-//  */
-// var bomb;
-
-class Cell {// public Color [] colors;
-    //         //;
+/**
+ * Class to represent a cell in the game.
+ * Generally this contains some data, like whether there is a mine
+ */
+class Cell {
     constructor() {
         /**
          * If the user has flagged this as a potential mine
@@ -20,10 +17,14 @@ class Cell {// public Color [] colors;
          */
         this._isClicked = false;
 
+        /**
+         * Whether the cell has a mine in it
+         * @type {Boolean}
+         */
         this._isMined = false;
 
         /**
-         * number of flagged neighbors
+         * Number of flagged neighboring mines
          * @type {Number}
          */
         this._neighborFlags = 0;
@@ -36,19 +37,27 @@ class Cell {// public Color [] colors;
 
     }
 
+    /**
+     * Color array for different mine numbers
+     * @param  {Number} i Which color to get
+     * @return {String}   html color
+     */
     static getColor(i) {
         var colors = ['blue','green','red','deeppink','cyan','yellow','orange','pink'];
         return colors[i];
     }
+
     /**
      * @return Boolean True if this cell is a mine
      */
     isMined() {
         return this._isMined;
     }
+
     setMine() {
         this._isMined = true;
     }
+
     /**
      * @return { Boolean } True if this cell was flagged by user.
      */
@@ -64,90 +73,68 @@ class Cell {// public Color [] colors;
     }
 
     /**
-     * @return { Number } The number of flagged neighbors
+     * Increment number adjacent mines
      */
-    getNumFlags() {
-        return this._neighborFlags;
-    }
-
-
-    /**
-     * set number adjacent mines
-     * @param {Number} Number of adjacent mines
-     */
-    setNumMines(num) {
-        this._neighborMines = num;
-    }
-
     incNumMines() {
         this._neighborMines++;
     }
 
-    incNumFlags() {
-        this._neighborFlags++;
+    /**
+     * Update the number of neighboring flags
+     */
+    changeNumFlags(delta) {
+        this._neighborFlags += delta;
     }
 
-    decNumFlags() {
-        this._neighborFlags--;
-    }
-
-    //add or remove a flag
-    //return true when a flag is added
-    // @ return boolean
+    /**
+     * Add or remove a flag
+     * @return {Number} Change in the number of flagged mines
+     */
     flag() {
+        var delta = 0;
         if (this._isClicked)
-            return false;
+            return delta;
         this._isFlagged =! this._isFlagged;
-        return this._isFlagged;
+        if (this._isMined) {
+            delta = this._isFlagged ? 1 : -1
+        }
+        return delta;
     }
 
-    //click on mine
-    //@ return Number mine Value
+    /**
+     * click on mine
+     * @return {Number} mine Value
+     */
     explore() {
         if (!this._isFlagged)
             this._isClicked=true;
         // else
             // return -999;//bad value (avoid(0=empty,-1=mine))
-        return this._mines;
+        return this.isSatisfied();
     }
 
+    /**
+     * Determine if all neighboring mines have been found
+     * @return {Boolean} True if satisfied
+     */
+    isSatisfied() {
+        return (this._neighborFlags === this._neighborMines) && !this._isMined;
+    }
+
+    /**
+     * Return whether the user clicked and blew up
+     * @return {Boolean} True if you lose
+     */
     isExploded() {
         return this._isClicked && this._isMined;
     }
 
-    // @reuturn Number
+    /**
+     * Query the number of mines that neighbor the cell
+     * @return {Number} The number of neighboring mines
+     */
     getNumMines() {
         return this._neighborMines;
-    }
-
-    // _initSprites() {
-    //     if (!bomb) {
-    //         bomb = document.getElementById("bomb");
-    //     }
-    // }
-    /**
-     * Draw the node as a circle.
-     *
-     * Assumes that ctx.beginPath() and ctx.fill() are called externally.
-     * See http://www.html5rocks.com/en/tutorials/canvas/performance/#toc-batch
-     *
-     * @param  {ctx} The 2d context on which to draw
-     * @param  {Number} x The horizontal draw position
-     * @param  {Number} y The vertical draw position
-     * @param  {Number} width The horizontal separation to prevent drawn nodes form overlapping
-     */
-    drawBuffered(ctx, x, y, r) {
-
-        // Call moveTo to update the cursor so a polygon is not created across circles
-        ctx.moveTo(x,y);
-
-        // Specify the arc to draw (it will actually be visible when fill is called)
-        // ctx.arc(x, y, r, 0, 2*Math.PI);
-        if (!this.isClicked()) {
-            // ctx.rect(x, y, r, r);// 0, 2*Math.PI);
-                // ctx.drawImage(tile, x, y, r, r);
-                ctx.drawImage(tile, 0, 0, 17, 17, x-1, y-1, r+2, r+2);
-        }
     }
 
     /**
@@ -158,20 +145,36 @@ class Cell {// public Color [] colors;
      * @param  {Number} r   radius
      * @param  {Number} s   extra space at cell border
      */
-    drawImmediate(ctx, x, y, r, s) {
+    draw(ctx, x, y, r, s) {
         if (this.isClicked()) {
             if (this.isMined()) {
-                ctx.drawImage(bomb, x, y, r, r);
+                ctx.drawImage(bombImg, x, y, r, r);
             } else if (this._neighborMines > 0) {
                 ctx.fillStyle = Cell.getColor(this._neighborMines-1);
                 ctx.fillText(''+this._neighborMines, x+3, y+r-1);
             }
         } else {
-            ctx.drawImage(tile, 0, 0, 17, 17, x, y, r, r);
+            ctx.drawImage(tileImg, 0, 0, 17, 17, x, y, r, r);
             if (this.isFlagged()) {
-                ctx.drawImage(flag, x+s, y+s, r-2*s, r-2*s);
+                ctx.drawImage(flagImg, x+s, y+s, r-2*s, r-2*s);
             }
         }
     }
 
+    drawReveal(ctx, x, y, r, s) {
+        if (!this.isClicked()) {
+            ctx.drawImage(tileImg, 0, 0, 17, 17, x, y, r, r);
+
+        }
+        if (this.isMined()) {
+            ctx.drawImage(bombImg, x, y, r, r);
+        } else if (this._neighborMines > 0) {
+            ctx.fillStyle = Cell.getColor(this._neighborMines-1);
+            ctx.fillText(''+this._neighborMines, x+3, y+r-1);
+        }
+
+        if (this.isFlagged()) {
+            ctx.drawImage(flagImg, x+s, y+s, r-2*s, r-2*s);
+        }
+    }
 }

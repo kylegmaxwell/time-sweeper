@@ -1,27 +1,41 @@
 'use strict';
 
-/**
- * @param  {DomElement} The div into which the canvas goes
- */
-function setup(container) {
+function handleLoad() {
+    var container = document.getElementById("divcontainer");
+    // var game = setup(container);
     var canvas = document.createElement('canvas');
     container.appendChild(canvas);
-    var ctx = canvas.getContext('2d');
+    var minesSpan = document.getElementById("minesDisplay");
+    var timeSpan = document.getElementById("timeDisplay");
+    var statusSpan = document.getElementById("statusDisplay");
 
-    var game = new Game(ctx);
+    runTests();
 
-    // var t0 = performance.now();
+    var game = new Game(canvas, minesSpan, timeSpan, statusSpan);
+
     canvas.addEventListener('mousedown', function handleClick(e) {
         game.mouseDown(e.offsetX, e.offsetY);
     });
     canvas.addEventListener('mouseup', function handleClick(e) {
         game.mouseUp(e.offsetX, e.offsetY);
-        // game.click(e.offsetX, e.offsetY);
-        // game.draw();
     });
 
     canvas.width = game.getWidth();
     canvas.height = game.getHeight();
 
-    game.draw();
+    game.render();
+
+    var diff = document.getElementById("difficultSelector");
+    diff.addEventListener('input', function(evt) {
+        var difficuly = parseInt(this.value);
+        game.reset(difficuly);
+        canvas.width = game.getWidth();
+        canvas.height = game.getHeight();
+        game.render();
+    });
+}
+
+function runTests() {
+    var tests = new Tests();
+    tests.run();
 }

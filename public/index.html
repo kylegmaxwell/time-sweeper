@@ -9,34 +9,57 @@
 </head>
 <body onload="handleLoad()">
     <header>
-        <h1>Time Sweeper!</h1>
+        <h2>Time Sweeper!</h2>
     </header>
     <main>
         <section>
-            <!-- This is where the content will be inserted -->
-            <div id="divcontainer"></div>
-            <!-- Bomb is a sprite used by cell.js -->
-            <!-- https://www.iconfinder.com/icons/1232/bomb_explosive_icon#size=128 -->
-            <img id="bomb" src="bomb.ico" hidden>
-            <img id="tile" src="tile.png" hidden>
-            <!-- https://www.iconfinder.com/icons/44253/flag_red_icon#size=32 -->
-            <img id="flag" src="flag.ico" hidden>
+            <details>
+                <summary>Instructions</summary>
+                Tap any tile to reveal it's contents, and hope it's not a bomb.<br/>
+                Tap and hold to mark the tile as a bomb.<br/>
+                When an empty tile's neighboring mines have been marked, tap and hold to reveal its neighbors.<br/>
+            </details>
+
+            <!-- This is where the game canvas will be inserted -->
+            <div class='block' id="divcontainer"></div>
         </section>
+
+        <section>
+            <div>
+            Time: <span id="timeDisplay">0</span>
+            </div>
+            <div>
+            Mines: <span id="minesDisplay">15</span>
+            </div>
+            <div>
+            Status: <span id="statusDisplay">Running</span>
+            </div>
+            <select id="difficultSelector">
+              <option value="0">Easy</option>
+              <option value="1">Medium</option>
+              <option value="2">Hard</option>
+            </select>
+        </section>
+
         <section>
             <a href="http://kylegmaxwell.com/demos/index.html">up</a> <br/>
         </section>
+
+        <section hidden>
+            <!-- Bomb is a sprite used by cell.js -->
+            <!-- https://www.iconfinder.com/icons/1232/bomb_explosive_icon#size=128 -->
+            <img id="bombImg" src="bomb.ico" hidden>
+            <img id="tileImg" src="tile.png" hidden>
+            <!-- https://www.iconfinder.com/icons/44253/flag_red_icon#size=32 -->
+            <img id="flagImg" src="flag.ico" hidden>
+        </section>
+
     </main>
+    <script src="Tests.js"></script>
     <script src="node.js"></script>
     <script src="cell.js"></script>
     <script src="board.js"></script>
     <script src="game.js"></script>
     <script src="index.js"></script>
-    <script>
-        function handleLoad() {
-            var container = document.getElementById("divcontainer");
-            // var bomb = document.getElementById("bomb");
-            setup(container, bomb);
-        }
-    </script>
 </body>
 </html>

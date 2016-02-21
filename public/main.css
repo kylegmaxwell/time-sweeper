@@ -9,8 +9,8 @@ main {
 section {
     /*background-color: #DFE7F8;*/
     border-radius: 8px;
-    padding: 1.0em;
-    margin: 1.0em;
+    padding: 0.5em;
+    /*margin: 1.0em;*/
 }
 a {
     color: #2233CC;
@@ -23,6 +23,17 @@ a:visited {
 canvas {
     background-color: #888888;
     border-radius: 8px;
-    /*padding: 1.0em;*/
-    /*margin: 1.0em;*/
+    margin-top: 1.0em;
+}
+
+canvas[status="1"] {
+    background-color: #88CC88;
+}
+
+canvas[status="-1"] {
+    background-color: #CC8888;
+}
+
+h2 {
+    margin: 0.25em;
 }
