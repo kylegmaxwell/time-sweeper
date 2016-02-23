@@ -223,25 +223,37 @@ class Board {
     }
 
     /**
+     * Helper function to flag a given cell
+     * @param  {Number} row  The row of the cell
+     * @param  {Number} col  The column of the cell
+     * @param  {Cell} cell The cell to flag
+     */
+    _handleFlag(row, col, cell) {
+        var result = cell.flag();
+        // First record just whether the flag was right
+        this._numFlaggedMines += result;
+        // Then record the user's choices
+        var userDelta = cell.isFlagged() ? 1 : -1;
+        this._numFlags += userDelta;
+        this._neighborFill(row, col, function (r, c, cell) {
+            cell.changeNumFlags(userDelta);
+        });
+
+    }
+
+    flagIndex(row, col) {
+        if (this._gameIsOver || !this._inBounds(row, col)) return;
+        this._handleFlag(row, col, this._grid[row][col]);
+    }
+
+    /**
      * Flag or un-flag a cell at the given coordinates as a mine
      * @param  {Number} x Click location in pixels
      * @param  {Number} y Click location in pixels
      */
     doFlag(x, y) {
         if (this._gameIsOver) return;
-        var _this = this;
-        this.getCellFromScrenSpace(x, y, function (row, col, cell) {
-            var result = cell.flag();
-            // First record just whether the flag was right
-            _this._numFlaggedMines += result;
-            // Then record the user's choices
-            var userDelta = cell.isFlagged() ? 1 : -1;
-            _this._numFlags += userDelta;
-            _this._neighborFill(row, col, function (r, c, cell) {
-                cell.changeNumFlags(userDelta);
-            });
-        });
-
+        this.getCellFromScrenSpace(x, y, this._handleFlag.bind(this));
     }
 
     /**
@@ -254,15 +266,30 @@ class Board {
         // if the cell will change state when explored
         if (!cell.isClicked() && !cell.isFlagged()) {
             this._numTilesRemaining--;
-            // console.log(this._numTilesRemaining);
             if (this._numTilesRemaining < 1) {
-                // console.log('gameIsOver');
                 this._gameIsOver = true;
                 this._victory = true;
             }
         }
         var result = cell.explore();
+        if (cell.isExploded()) {
+            this._gameIsOver = true;
+        }
         return result;
+    }
+
+    /**
+     * Helper function to explore on a given cell
+     * @param  {Number} row  The row of the cell
+     * @param  {Number} col  The column of the cell
+     * @param  {Cell} cell The cell to explore
+     */
+    _handleExplore (row, col, cell) {
+        var wasExplored = cell.isClicked();
+        this._exploreCell(cell);
+        if ((cell.getNumMines() === 0 || wasExplored) && cell.isSatisfied()) {
+            this._floodFill(row, col);
+        }
     }
 
     /**
@@ -272,16 +299,12 @@ class Board {
      */
     doExplore(x, y) {
         if (this._gameIsOver) return;
-        var _this = this;
-        this.getCellFromScrenSpace(x, y, function (row, col, cell) {
-            var wasExplored = cell.isClicked();
-            _this._exploreCell(cell);
-            if (cell.isExploded()) {
-                _this._gameIsOver = true;
-            } else if ((cell.getNumMines() === 0 || wasExplored) && cell.isSatisfied()) {
-                _this._floodFill(row, col);
-            }
-        });
+        this.getCellFromScrenSpace(x, y, this._handleExplore.bind(this));
+    }
+
+    exploreIndex(row, col) {
+        if (this._gameIsOver || !this._inBounds(row, col)) return;
+        this._handleExplore(row, col, this._grid[row][col]);
     }
 
     /**
@@ -314,9 +337,6 @@ class Board {
         var _this = this;
         if (cell.isSatisfied()) {
             var func = function exploreNeighbors(r, c, cell) {
-                if (!cell.isFlagged && cell.isMined()) {
-                    _this._gameIsOver = true;
-                }
                 if (!cell.isClicked() && _this._exploreCell(cell) && (cell.getNumMines() === 0)) {
                     _this._floodFill(r, c);
                 }

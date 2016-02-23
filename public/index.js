@@ -2,7 +2,6 @@
 
 function handleLoad() {
     var container = document.getElementById("divcontainer");
-    // var game = setup(container);
     var canvas = document.createElement('canvas');
     container.appendChild(canvas);
     var minesSpan = document.getElementById("minesDisplay");
@@ -15,10 +14,42 @@ function handleLoad() {
 
     canvas.addEventListener('mousedown', function handleClick(e) {
         game.mouseDown(e.offsetX, e.offsetY);
-    });
+    }, true);
     canvas.addEventListener('mouseup', function handleClick(e) {
         game.mouseUp(e.offsetX, e.offsetY);
-    });
+    }, true);
+
+    var ignore = function ignoreEvent(e) {
+        e.stopPropagation();
+        e.preventDefault();
+    }
+
+    canvas.oncontextmenu = ignore;
+    var canvasRect = canvas.getBoundingClientRect();
+    var canvasTop = canvasRect.top;
+    var canvasLeft = canvasRect.left;
+
+    var ongoingTouches = {};
+    canvas.addEventListener("touchstart", function (e) {
+        ignore(e);
+        var touch = e.touches[0];
+        ongoingTouches[touch.identifier] = touch;
+        var x = touch.clientX - canvasLeft + 0.0 * touch.radiusX;
+        var y = touch.clientY - canvasTop + 0.0 * touch.radiusY;
+
+        game.mouseDown(x, y);
+    }, false);
+    canvas.addEventListener("touchend", function (e) {
+        ignore(e);
+        for (var key in e.changedTouches) {
+            var touch = e.changedTouches[key];
+            if (ongoingTouches[touch.identifier]) {
+                var x = touch.clientX - canvasLeft + 0.0 * touch.radiusX;
+                var y = touch.clientY - canvasTop + 0.0 * touch.radiusY;
+                game.mouseUp(x, y);
+            }
+        }
+    }, false);
 
     canvas.width = game.getWidth();
     canvas.height = game.getHeight();

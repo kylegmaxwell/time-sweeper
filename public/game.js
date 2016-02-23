@@ -11,7 +11,8 @@ class Game {
         this._minesSpan = minesSpan;
         this._statusSpan = statusSpan;
         this._timeSpan = timeSpan;
-        this.setup(Game.getLevel(0));
+        this._cellSize = 20;
+        this.setup(Game.getLevel(0), false);
     }
 
     /**
@@ -25,12 +26,24 @@ class Game {
     }
 
     /**
+     * Create the board of the given size and mines
+     * @param  {Boolean} debug If true, will use the test data instead of a random board
+     */
+    _createBoard(level, debug) {
+        if (!debug) {
+            this._board = new Board(level[0], level[1], level[2], this._cellSize);
+        } else {
+            var mines = Tests.getTest(1);
+            this._board = new Board(mines.length, mines[0].length, mines, this._cellSize);
+        }
+    }
+    /**
      * Set up the board for a new game
      * @param  {Array} level [numRows, numCols, numMines]
      */
-    setup(level) {
+    setup(level, debug) {
         var cellSize = 20;
-        this._board = new Board(level[0], level[1], level[2], 20);
+        this._createBoard(level, debug);
         this._width=this._board.getCanvasWidth();
         this._height=this._board.getCanvasHeight();
         this.styleContext();
@@ -42,6 +55,10 @@ class Game {
         this._setupTimer();
     }
 
+    /**
+     * Start a timeout loop that will update the html timer span
+     * @return {[type]} [description]
+     */
     _setupTimer() {
         var _this = this;
         var updateTimer = function () {
@@ -55,6 +72,7 @@ class Game {
         }
         updateTimer();
     }
+
     /**
      * @param  {DomElement} The div into which the canvas goes
      */
@@ -67,6 +85,9 @@ class Game {
         this._ctx.font = '18px Monaco';
     }
 
+    /**
+     * Update html and draw canvas
+     */
     render() {
         this._draw();
         this._minesSpan.textContent = this._board.getNumDisplayMines();
@@ -81,11 +102,17 @@ class Game {
         }
     }
 
+    /**
+     * Start a new game by creating a new board
+     * @param  {Number} difficulty The difficulty index
+     */
     reset(difficulty) {
-        console.log('reset', difficulty);
         this.setup(Game.getLevel(difficulty));
     }
 
+    /**
+     * Redraw the canvas to show the updated game state.
+     */
     _draw() {
         this._ctx.clearRect(0, 0, this._width, this._height);
         this.styleContext();
@@ -102,6 +129,7 @@ class Game {
         this._ctx.stroke();
 
     }
+
     /**
      * If there is a pending click cancel it and return true
      * @return {Boolean} Whether the timeout was canceled
@@ -132,10 +160,6 @@ class Game {
             this._board.doExplore(x, y);
         }
         this.render();
-    }
-
-    click(x, y) {
-        this._board.click(x, y);
     }
 
     getWidth() {
