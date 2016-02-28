@@ -47,7 +47,6 @@ class Game {
         this._width=this._board.getCanvasWidth();
         this._height=this._board.getCanvasHeight();
         this.styleContext();
-        this._t0 = performance.now();
         this._mouseTimeoutCallback = null;
         this._mouseTimeDelay = 300;
         this._time = -1;
@@ -168,5 +167,25 @@ class Game {
 
     getHeight() {
         return this._height;
+    }
+
+    toString() {
+        return this._board.toString();
+    }
+
+    toJSON() {
+        return {
+            "_cellSize": this._cellSize,
+            "_time": this._time,
+            "_width": this._width,
+            "_height": this._height,
+            "_board": this._board.toJSON()
+        };
+    }
+
+    reload(data) {
+        this._time = data._time;
+        //TODO
+        console.log('TODO read other properties');
     }
 }

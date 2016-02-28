@@ -43,6 +43,22 @@ class Board {
         this._calculateNeighbors();
     }
 
+    toJSON() {
+        return {
+            _gameIsOver: this._gameIsOver,
+            _victory: this._victory,
+            _cellSize: this._cellSize,
+            _margin: this._margin,
+            _numRows: this._numRows,
+            _numCols: this._numCols,
+            _numMines: this._numMines,
+            _numFlaggedMines: this._numFlaggedMines,
+            _numTilesRemaining: this._numTilesRemaining,
+            _numFlags: this._numFlags,
+            _grid: this._grid
+        };
+    }
+
     /**
      * Create a non-random board from input data
      * @param  {Array.<Array.<Number>>} mines Square array of mines

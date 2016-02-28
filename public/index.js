@@ -1,5 +1,7 @@
 'use strict';
 
+var game;
+
 function handleLoad() {
     var container = document.getElementById("divcontainer");
     var canvas = document.createElement('canvas');
@@ -10,7 +12,7 @@ function handleLoad() {
 
     runTests();
 
-    var game = new Game(canvas, minesSpan, timeSpan, statusSpan);
+    game = new Game(canvas, minesSpan, timeSpan, statusSpan);
 
     canvas.addEventListener('mousedown', function handleClick(e) {
         game.mouseDown(e.offsetX, e.offsetY);
@@ -69,4 +71,41 @@ function handleLoad() {
 function runTests() {
     var tests = new Tests();
     tests.run();
+}
+
+function doLogin() {
+    window.location.pathname = '/auth/facebook'
+}
+
+function saveGame() {
+    var gameState = JSON.stringify(game);
+    postRequest('/save', gameState, function () {
+        console.log(this.responseText);
+    });
+}
+
+function postRequest(path, data, callback) {
+    var xhr = new XMLHttpRequest();   // new HttpRequest instance
+    xhr.addEventListener("load", callback);
+    xhr.open("POST", path);
+    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    xhr.send(JSON.stringify({"data":data}));
+}
+
+function loadGame() {
+    getRequest("/load", function () {
+        if (this.responseText === 'Not logged in') {
+            console.log(this.responseText);
+        } else {
+            var responseObj = JSON.parse(JSON.parse(this.responseText).data);
+            game.reload(responseObj);
+        }
+    });
+}
+
+function getRequest(path, callback) {
+    var xhr = new XMLHttpRequest();
+    xhr.addEventListener("load", callback);
+    xhr.open("GET", path);
+    xhr.send();
 }
