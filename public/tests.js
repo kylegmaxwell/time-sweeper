@@ -19,6 +19,13 @@ class Tests {
                 [1, 0, 0, 0],
                 [0, 0, 1, 0],
                 [0, 0, 0, 0]
+            ],
+            [
+                [0, 0, 0, 0, 0, 0, 0, 0, 1],
+                [0, 0, 0, 0, 1, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 1, 0, 0],
+                [0, 1, 0, 1, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0]
             ]
         ];
 
@@ -30,6 +37,8 @@ class Tests {
         this._cellSize = 20;
         this.test0();
         this.test1();
+        this.test2();
+        console.log('Tests Completed');
     }
 
 
@@ -67,6 +76,38 @@ class Tests {
         Tests.expect(board.gameIsOver() === true);
     }
 
+    test2() {
+        console.log('Test 2');
+        var mines = Tests.getTest(2);
+        var board = new Board(mines.length, mines[0].length, mines, this._cellSize);
+        Tests.expect(board.gameIsOver() === false);
+        Tests.expectEqual(board._numRows, 5);
+        Tests.expectEqual(board._numCols, 9);
+        Tests.expectEqual(board._grid[2][6].isMined(), true);
+
+        board.exploreIndex(4, 8);
+        Tests.expectEqual(board._grid[2][6].isClicked(), false);
+        Tests.expectEqual(board._grid[2][7].isClicked(), true);
+        Tests.expectEqual(board._grid[2][7].isSatisfied(), false);
+        board.flagIndex(2, 6);
+        Tests.expectEqual(board._grid[2][6].isFlagged(), true);
+        Tests.expectEqual(board._grid[2][7].isFlagged(), false);
+        Tests.expectEqual(board._grid[2][7].isSatisfied(), true);
+
+        // Check that flagging empty cells has no effect
+        board.flagIndex(2, 7);
+        Tests.expectEqual(board._grid[2][6].isFlagged(), true);
+        Tests.expectEqual(board._grid[2][6].isClicked(), false);
+        Tests.expectEqual(board._grid[2][7].isFlagged(), false);
+        Tests.expectEqual(board._grid[2][7].isClicked(), true);
+        Tests.expectEqual(board._grid[2][7].isSatisfied(), true);
+
+        // Check that flood clicking satisfied cell clears neighbors
+        Tests.expectEqual(board._grid[1][6].isClicked(), false);
+        board.exploreIndex(2, 7);
+        Tests.expectEqual(board._grid[1][6].isClicked(), true);
+    }
+
     static expectEqual(a, b) {
         var message = 'Expected '+b+' but got '+a;
         Tests.expect(a === b, message);
@@ -74,9 +115,7 @@ class Tests {
 
     static expect(statement, message) {
         message = message || 'Test failed';
-        if (statement) {
-            console.log('ok');
-        } else {
+        if (!statement) {
             throw new Error(message);
         }
     }

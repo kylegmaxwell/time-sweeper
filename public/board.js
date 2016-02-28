@@ -297,6 +297,7 @@ class Board {
      * @param  {Cell} cell The cell to flag
      */
     _handleFlag(row, col, cell) {
+        if (cell.isClicked()) return;
         var result = cell.flag();
         // First record just whether the flag was right
         this._numFlaggedMines += result;

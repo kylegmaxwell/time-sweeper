@@ -12,7 +12,15 @@ class Game {
         this._statusSpan = statusSpan;
         this._timeSpan = timeSpan;
         this._cellSize = 20;
-        this.setup(Game.getLevel(0), false);
+        this.setup(Game.getLevel(0));
+    }
+
+    /**
+     * Set to a non-negative value when you want to run the test board instead of a random one
+     * @return {Boolean} Whether to use a test board for debugging
+     */
+    static debugIndex() {
+        return -1; // 2;
     }
 
     /**
@@ -27,13 +35,13 @@ class Game {
 
     /**
      * Create the board of the given size and mines
-     * @param  {Boolean} debug If true, will use the test data instead of a random board
      */
-    _createBoard(level, debug) {
-        if (!debug) {
+    _createBoard(level) {
+        var index = Game.debugIndex();
+        if (index < 0) {
             this._board = new Board(level[0], level[1], level[2], this._cellSize);
         } else {
-            var mines = Tests.getTest(1);
+            var mines = Tests.getTest(index);
             this._board = new Board(mines.length, mines[0].length, mines, this._cellSize);
         }
     }
