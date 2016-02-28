@@ -24,6 +24,11 @@ canvas {
     background-color: #888888;
     border-radius: 8px;
     margin-top: 1.0em;
+    /* Prevent canvas from being selected */
+    -moz-user-select: -moz-none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 canvas[status="1"] {
