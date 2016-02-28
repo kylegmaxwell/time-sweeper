@@ -67,12 +67,17 @@ class Game {
      * @return {[type]} [description]
      */
     _setupTimer() {
+        // Make sure to cancel the previous timer
+        if (this._timerCallback) {
+            clearTimeout(this._timerCallback);
+        }
+        // Setup the new timer.
         var _this = this;
         var updateTimer = function () {
             if (_this._board.gameIsOver()) return;
             _this._time++;
             _this._timeSpan.textContent = _this._time;
-            setTimeout(function() {
+            _this._timerCallback = setTimeout(function() {
                 updateTimer();
             },1000);
             // TODO might need to cancel timer on reset
