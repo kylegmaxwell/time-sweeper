@@ -98,6 +98,9 @@ class Game {
                 this._statusSpan.textContent = "YOU LOSE";
                 this._canvas.setAttribute('status', -1);
             }
+        } else {
+            this._statusSpan.textContent = "Running";
+            this._canvas.setAttribute('status', 0);
         }
     }
 
@@ -185,7 +188,9 @@ class Game {
 
     reload(data) {
         this._time = data._time;
-        //TODO
-        console.log('TODO read other properties');
+        this._cellSize = data._cellSize;
+        this._height = data._height;
+        this._width = data._width;
+        this._board.reload(data._board);
     }
 }

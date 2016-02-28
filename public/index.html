@@ -19,9 +19,8 @@
                 Tap and hold to mark the tile as a bomb.<br/>
                 When an empty tile's neighboring mines have been marked, tap and hold to reveal its neighbors.<br/>
             </details>
-
-            <!-- This is where the game canvas will be inserted -->
-            <div class='block' id="divcontainer"></div>
+            <!-- This is where the game canvas will be rendered -->
+            <canvas id="gameCanvas"></canvas>
         </section>
 
         <section>
@@ -39,9 +38,10 @@
               <option value="1">Medium</option>
               <option value="2">Hard</option>
             </select>
-            <button type="button" onclick="doLogin()">Login</button>
-            <button type="button" onclick="saveGame()">Save</button>
-            <button type="button" onclick="loadGame()">Load</button>
+            <button type="button" id="loginButton" onclick="doLogin()">Login</button>
+            <button type="button" id="saveButton" onclick="saveGame()">Save</button>
+            <button type="button" id="loadButton" onclick="loadGame()">Load</button>
+            <button type="button" id="resetButton" onclick="resetGame()">Reset</button>
         </section>
 
         <section>

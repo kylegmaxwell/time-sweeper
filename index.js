@@ -11,7 +11,7 @@ app.set('port', globals.getPort());
 
 auth(app);
 
-app.use('/static',express.static('public'));
+app.use('/',express.static('public'));
 
 app.listen(app.get('port'), function() {
   console.log('Node app is running on port', app.get('port'));

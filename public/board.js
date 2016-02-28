@@ -17,7 +17,6 @@ class Board {
         this._numRows=numRows;
         this._numCols=numCols;
 
-        this._grid = [];
         this._initGrid();
 
         if (numMines.constructor === Array) {
@@ -43,6 +42,10 @@ class Board {
         this._calculateNeighbors();
     }
 
+    /**
+     * Determine what data to serialize for game saving
+     * @return {Object} Serializeable object
+     */
     toJSON() {
         return {
             _gameIsOver: this._gameIsOver,
@@ -57,6 +60,26 @@ class Board {
             _numFlags: this._numFlags,
             _grid: this._grid
         };
+    }
+
+    /**
+     * Replace the game state with data from a loaded game
+     * @param  {Object} data The full game state
+     */
+    reload(data) {
+        this._cellSize = data._cellSize;
+        this._gameIsOver = data._gameIsOver;
+        this._victory = data._victory
+        this._margin = data._margin;
+        this._margin = data._margin
+        this._numFlaggedMines = data._numFlaggedMines;
+        this._numFlags = data._numFlags;
+        this._numMines = data._numMines;
+        this._numTilesRemaining = data._numTilesRemaining;
+        this._numRows = data._numRows;
+        this._numCols = data._numCols;
+        this._initGrid();
+        this._reloadGrid(data._grid);
     }
 
     /**
@@ -78,19 +101,43 @@ class Board {
         return count;
     }
 
+    /**
+     * Calculate the size of the canvas required to render this board
+     * @return {Number} The width, in pixels
+     */
     getCanvasWidth() {
         return this._numCols * this._cellSize + 2*this._margin;
     }
 
+    /**
+     * Calculate the size of the canvas required to render this board
+     * @return {Number} The height, in pixels
+     */
     getCanvasHeight() {
         return this._numRows * this._cellSize + 2*this._margin;
     }
 
+    /**
+     * Create an empty grid of cells to store the board state
+     */
     _initGrid() {
+        this._grid = [];
         for (var r=0;r<this._numRows;r++) {
             this._grid.push([]);
             for (var c=0;c<this._numCols;c++) {
-                this._grid[r].push(new Cell(false));
+                this._grid[r].push(new Cell());
+            }
+        }
+    }
+
+    /**
+     * Replace the cell contents with data from a loaded game
+     * @param  {Array} gridData 2D Array of objects containing cell data
+     */
+    _reloadGrid(gridData) {
+        for (var r=0;r<this._numRows;r++) {
+            for (var c=0;c<this._numCols;c++) {
+                this._grid[r][c].reload(gridData[r][c]);
             }
         }
     }
@@ -104,6 +151,9 @@ class Board {
         return r >= 0 && r < this._numRows && c >= 0 && c < this._numCols;
     }
 
+    /**
+     * Fill the first cells with the given number of mines, then shuffle them.
+     */
     _initMines()
     {
         var mines = this._numMines;
@@ -130,6 +180,7 @@ class Board {
         return Math.floor((Math.random() * range));
 
     }
+
     /**
      * Use Ms. Teukolsky's Friend's Shuffle algorithm
      * swap each element with a random element
@@ -162,6 +213,7 @@ class Board {
             }
         }
     }
+
     /**
      * Convert the board to a string for display
      * @return {String} The rendered board
@@ -257,6 +309,12 @@ class Board {
 
     }
 
+    /**
+     * Flag a cell given by index.
+     * Used by tests to emulate user actions.
+     * @param  {Number} row The row of the clicked cell.
+     * @param  {Number} col The column of the clicked cell.
+     */
     flagIndex(row, col) {
         if (this._gameIsOver || !this._inBounds(row, col)) return;
         this._handleFlag(row, col, this._grid[row][col]);
@@ -318,6 +376,12 @@ class Board {
         this.getCellFromScrenSpace(x, y, this._handleExplore.bind(this));
     }
 
+    /**
+     * Explore a cell given by index.
+     * Used by tests to emulate user actions.
+     * @param  {Number} row The row of the clicked cell.
+     * @param  {Number} col The column of the clicked cell.
+     */
     exploreIndex(row, col) {
         if (this._gameIsOver || !this._inBounds(row, col)) return;
         this._handleExplore(row, col, this._grid[row][col]);

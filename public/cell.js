@@ -6,16 +6,16 @@
 class Cell {
     constructor() {
         /**
-         * If the user has flagged this as a potential mine
-         * @type {Boolean}
-         */
-        this._isFlagged = false;
-
-        /**
          * Whether the user has clicked this cell
          * @type {Boolean}
          */
         this._isClicked = false;
+
+        /**
+         * If the user has flagged this as a potential mine
+         * @type {Boolean}
+         */
+        this._isFlagged = false;
 
         /**
          * Whether the cell has a mine in it
@@ -35,6 +35,19 @@ class Cell {
          */
         this._neighborMines = 0;
 
+    }
+
+    /**
+     * Reset the properties of this cell.
+     * The properties are replaced by the given data from a loaded game.
+     * @param  {Object} cellData The new state
+     */
+    reload(cellData) {
+        this._isClicked = cellData._isClicked;
+        this._isFlagged = cellData._isFlagged;
+        this._isMined = cellData._isMined;
+        this._neighborFlags = cellData._neighborFlags;
+        this._neighborMines = cellData._neighborMines;
     }
 
     /**
