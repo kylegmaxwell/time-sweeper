@@ -7,8 +7,8 @@
  */
 class Board {
     constructor(numRows, numCols, numMines, cellSize) {
-        this._gameIsOver=false;
-        this._victory=false;
+        this._gameIsOver = false;
+        this._victory = false;
 
         // The radius of a game cell in pixels
         this._cellSize = cellSize;
@@ -343,7 +343,7 @@ class Board {
             this._numTilesRemaining--;
             if (this._numTilesRemaining < 1) {
                 this._gameIsOver = true;
-                this._victory = true;
+                this._victory = !cell.isMined();
             }
         }
         var result = cell.explore();

@@ -4,6 +4,7 @@ class Tests {
 
     /**
      * Fixture data for test runs
+     * To make a board use this data change game.js:debugIndex
      */
     static getTest(index) {
 
@@ -26,6 +27,12 @@ class Tests {
                 [0, 0, 0, 0, 0, 0, 1, 0, 0],
                 [0, 1, 0, 1, 0, 0, 0, 0, 0],
                 [0, 0, 0, 0, 0, 0, 0, 0, 0]
+            ],
+            [
+                [0, 0, 0, 0],
+                [0, 0, 0, 0],
+                [0, 0, 0, 1],
+                [0, 0, 1, 0]
             ]
         ];
 
@@ -38,6 +45,7 @@ class Tests {
         this.test0();
         this.test1();
         this.test2();
+        this.test3();
         console.log('Tests Completed');
     }
 
@@ -106,6 +114,21 @@ class Tests {
         Tests.expectEqual(board._grid[1][6].isClicked(), false);
         board.exploreIndex(2, 7);
         Tests.expectEqual(board._grid[1][6].isClicked(), true);
+    }
+
+    // This came up when a bug was discovered where, if you click
+    // on a mine as the last click it erroneously marks it as a victory
+    test3() {
+        console.log('Test 3');
+        var mines = Tests.getTest(3);
+        var board = new Board(mines.length, mines[0].length, mines, this._cellSize);
+
+        // Check that explore flood fill can end game when flags are wrong
+        board.exploreIndex(0, 0);
+        Tests.expect(board.gameIsOver() === false);
+        board.exploreIndex(2, 3);
+        Tests.expect(board.gameIsOver() === true);
+        Tests.expect(board.getVictory() === false);
     }
 
     static expectEqual(a, b) {
