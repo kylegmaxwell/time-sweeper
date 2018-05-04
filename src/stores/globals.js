@@ -37,7 +37,7 @@ exports.getFacebookSecret = function () {
  */
 exports.getCallbackUrl = function () {
     if (process.env.ENV === 'prod') {
-        return 'http://time-sweeper.herokuapp.com/auth/facebook/callback';
+        return 'https://time-sweeper.herokuapp.com/auth/facebook/callback';
     } else {
         return 'http://localhost:'+this.getPort()+'/auth/facebook/callback';
     }
